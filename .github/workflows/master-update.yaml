@@ -1,0 +1,21 @@
+name: Master Branch Update
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  run_tests:
+    name: Run go test suite
+    # if: always() - in case we have deps, but want to run regardless of their result
+    # needs: [ job1, job2 ]
+    runs-on: ubuntu-latest
+    steps:
+      uses: actions/checkout@v2
+      - name: Setup GO environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
+      - run: go test
