@@ -10,7 +10,9 @@ package tfparser
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"path/filepath"
 	"strings"
 )
 
@@ -39,6 +41,35 @@ type parser struct {
 // ParseString parses a string with tf configurarion
 func ParseString(s string) (*TFconfig, error) {
 	return (&parser{strings.TrimSpace(s), 0, &TFconfig{}, stateTop, nil, "", ""}).parse()
+}
+
+// ParseFile parses terraform config from file filename
+func ParseFile(filename string) (*TFconfig, error) {
+	content, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return ParseString(string(content))
+}
+
+// ParseDir parses terraform config in all *.tf files in a dir dirname
+func ParseDir(dirname string) (*TFconfig, error) {
+	dirList, err := ioutil.ReadDir(dirname)
+	if err != nil {
+		return nil, err
+	}
+	var s string
+	for _, f := range dirList {
+		// read only *.tf file
+		if strings.HasSuffix(f.Name(), ".tf") {
+			c, err := ioutil.ReadFile(filepath.Join(dirname, f.Name()))
+			if err != nil {
+				return nil, err
+			}
+			s += "\n" + string(c)
+		}
+	}
+	return ParseString(s)
 }
 
 func (p *parser) parse() (*TFconfig, error) {
